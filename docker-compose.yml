@@ -6,10 +6,21 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./media:/app/media
-      - ./db.sqlite3:/app/db.sqlite3
+      - media_data:/app/media
+      - db_data:/app
     environment:
-      - DEBUG=True
-      - SECRET_KEY=your-secret-key-here
-      - ALLOWED_HOSTS=localhost,127.0.0.1
-    command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+      - DEBUG=${DEBUG:-False}
+      - SECRET_KEY=${SECRET_KEY:?SECRET_KEY must be set in .env file}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-localhost,127.0.0.1}
+      - OIDC_RP_CLIENT_ID=${OIDC_RP_CLIENT_ID:-}
+      - OIDC_RP_CLIENT_SECRET=${OIDC_RP_CLIENT_SECRET:-}
+      - OIDC_OP_AUTHORIZATION_ENDPOINT=${OIDC_OP_AUTHORIZATION_ENDPOINT:-https://gitlab.com/oauth/authorize}
+      - OIDC_OP_TOKEN_ENDPOINT=${OIDC_OP_TOKEN_ENDPOINT:-https://gitlab.com/oauth/token}
+      - OIDC_OP_USER_ENDPOINT=${OIDC_OP_USER_ENDPOINT:-https://gitlab.com/oauth/userinfo}
+      - OIDC_OP_JWKS_ENDPOINT=${OIDC_OP_JWKS_ENDPOINT:-https://gitlab.com/oauth/discovery/keys}
+      - OIDC_ALLOWED_PROJECTS=${OIDC_ALLOWED_PROJECTS:-}
+    restart: unless-stopped
+
+volumes:
+  media_data:
+  db_data:
