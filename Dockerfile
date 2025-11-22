@@ -1,5 +1,5 @@
 # Multi-stage build for smaller image size
-FROM python:3.12-slim as builder
+FROM python:3.13-slim as builder
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
@@ -20,7 +20,7 @@ COPY pyproject.toml ./
 RUN uv sync --frozen --no-dev
 
 # Final stage
-FROM python:3.12-slim
+FROM python:3.13-slim
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \

@@ -21,12 +21,8 @@ class Command(BaseCommand):
         token, created = Token.objects.get_or_create(user=user)
 
         if created:
-            self.stdout.write(
-                self.style.SUCCESS(f"Created new token for user {username}")
-            )
+            self.stdout.write(self.style.SUCCESS(f"Created new token for user {username}"))
         else:
-            self.stdout.write(
-                self.style.WARNING(f"Token already exists for user {username}")
-            )
+            self.stdout.write(self.style.WARNING(f"Token already exists for user {username}"))
 
         self.stdout.write(f"Token: {token.key}")

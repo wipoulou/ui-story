@@ -103,9 +103,7 @@ class Migration(migrations.Migration):
                         fields=["project", "branch", "timestamp"],
                         name="screenshots_project_14a013_idx",
                     ),
-                    models.Index(
-                        fields=["page_name"], name="screenshots_page_na_8c4178_idx"
-                    ),
+                    models.Index(fields=["page_name"], name="screenshots_page_na_8c4178_idx"),
                 ],
             },
         ),

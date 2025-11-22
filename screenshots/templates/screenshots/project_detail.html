@@ -3,27 +3,38 @@
 {% block title %}{{ project.name }} - Branches{% endblock %}
 
 {% block content %}
-<div class="breadcrumb">
-    <a href="/">Projects</a> / {{ project.name }}
-</div>
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">Projects</a></li>
+        <li class="breadcrumb-item active">{{ project.name }}</li>
+    </ol>
+</nav>
 
-<h2>{{ project.name }} - Branches</h2>
+<h2 class="mb-4">{{ project.name }} - Branches</h2>
 
 {% if branches %}
-    {% for branch in branches %}
-    <div class="card">
-        <h3>
-            <a href="{% url 'screenshots:branch_detail' project.id branch.id %}">{{ branch.name }}</a>
-            {% if branch.is_default %}
-                <span class="badge badge-primary">Default</span>
-            {% endif %}
-        </h3>
-        <p><small>Created: {{ branch.created_at|date:"Y-m-d H:i" }}</small></p>
+    <div class="row">
+        {% for branch in branches %}
+        <div class="col-md-6 mb-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <a href="{% url 'screenshots:branch_detail' project.id branch.id %}">{{ branch.name }}</a>
+                        {% if branch.is_default %}
+                            <span class="badge bg-primary">Default</span>
+                        {% endif %}
+                    </h5>
+                    <p class="card-text">
+                        <small class="text-muted">Created: {{ branch.created_at|date:"Y-m-d H:i" }}</small>
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
     </div>
-    {% endfor %}
 {% else %}
-    <div class="card">
-        <p>No branches found for this project.</p>
+    <div class="alert alert-info">
+        <p class="mb-0">No branches found for this project.</p>
     </div>
 {% endif %}
 {% endblock %}

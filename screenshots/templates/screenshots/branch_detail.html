@@ -3,29 +3,33 @@
 {% block title %}{{ project.name }} - {{ branch.name }}{% endblock %}
 
 {% block content %}
-<div class="breadcrumb">
-    <a href="/">Projects</a> / 
-    <a href="{% url 'screenshots:project_detail' project.id %}">{{ project.name }}</a> / 
-    {{ branch.name }}
-</div>
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">Projects</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'screenshots:project_detail' project.id %}">{{ project.name }}</a></li>
+        <li class="breadcrumb-item active">{{ branch.name }}</li>
+    </ol>
+</nav>
 
-<h2>{{ project.name }} - {{ branch.name }}</h2>
+<h2 class="mb-4">{{ project.name }} - {{ branch.name }}</h2>
 
 {% if grouped_screenshots %}
     {% for group in grouped_screenshots %}
-    <div class="timestamp-group">
-        <h3>{{ group.timestamp|date:"Y-m-d H:i:s" }}</h3>
+    <div class="mb-5">
+        <h3 class="mb-3 pb-2 border-bottom">{{ group.timestamp|date:"Y-m-d H:i:s" }}</h3>
         <div class="screenshot-grid">
             {% for screenshot in group.screenshots %}
-            <div class="screenshot-item">
+            <div class="card">
                 <a href="{% url 'screenshots:screenshot_comparison' project.id branch.id screenshot.page_name %}">
-                    <img src="{{ screenshot.image.url }}" alt="{{ screenshot.page_name }}">
+                    <img src="{{ screenshot.image.url }}" alt="{{ screenshot.page_name }}" class="card-img-top">
                 </a>
-                <div class="screenshot-info">
-                    <strong>{{ screenshot.page_name }}</strong><br>
-                    <small>Viewport: {{ screenshot.viewport_size }}</small><br>
+                <div class="card-body">
+                    <h5 class="card-title">{{ screenshot.page_name }}</h5>
+                    <p class="card-text">
+                        <small class="text-muted">Viewport: {{ screenshot.viewport_size }}</small>
+                    </p>
                     {% if screenshot.pipeline_url %}
-                        <small><a href="{{ screenshot.pipeline_url }}" target="_blank">Pipeline</a></small>
+                        <a href="{{ screenshot.pipeline_url }}" target="_blank" class="btn btn-sm btn-outline-primary">Pipeline</a>
                     {% endif %}
                 </div>
             </div>
@@ -34,8 +38,8 @@
     </div>
     {% endfor %}
 {% else %}
-    <div class="card">
-        <p>No screenshots found for this branch.</p>
+    <div class="alert alert-info">
+        <p class="mb-0">No screenshots found for this branch.</p>
     </div>
 {% endif %}
 {% endblock %}

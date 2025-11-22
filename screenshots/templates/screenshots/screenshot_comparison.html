@@ -3,60 +3,84 @@
 {% block title %}Compare {{ page_name }} - {{ project.name }}{% endblock %}
 
 {% block content %}
-<div class="breadcrumb">
-    <a href="/">Projects</a> / 
-    <a href="{% url 'screenshots:project_detail' project.id %}">{{ project.name }}</a> / 
-    <a href="{% url 'screenshots:branch_detail' project.id branch.id %}">{{ branch.name }}</a> / 
-    Compare {{ page_name }}
-</div>
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">Projects</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'screenshots:project_detail' project.id %}">{{ project.name }}</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'screenshots:branch_detail' project.id branch.id %}">{{ branch.name }}</a></li>
+        <li class="breadcrumb-item active">Compare {{ page_name }}</li>
+    </ol>
+</nav>
 
-<h2>Compare: {{ page_name }}</h2>
+<h2 class="mb-4">Compare: {{ page_name }}</h2>
 
 <div class="comparison-container">
-    <div class="comparison-item">
-        <h3>Current Branch: {{ branch.name }}</h3>
+    <div class="card">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0">Current Branch: {{ branch.name }}</h5>
+        </div>
         {% if current_screenshot %}
-            <img src="{{ current_screenshot.image.url }}" alt="{{ page_name }} - {{ branch.name }}">
-            <div style="padding: 1rem;">
-                <p><strong>Timestamp:</strong> {{ current_screenshot.timestamp|date:"Y-m-d H:i:s" }}</p>
-                <p><strong>Viewport:</strong> {{ current_screenshot.viewport_size }}</p>
-                {% if current_screenshot.pipeline_url %}
-                    <p><strong>Pipeline:</strong> <a href="{{ current_screenshot.pipeline_url }}" target="_blank">View</a></p>
-                {% endif %}
-                {% if current_screenshot.metadata %}
-                    <p><strong>Metadata:</strong> <pre>{{ current_screenshot.metadata|safe }}</pre></p>
-                {% endif %}
+            <img src="{{ current_screenshot.image.url }}" alt="{{ page_name }} - {{ branch.name }}" class="card-img-top">
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-3">Timestamp:</dt>
+                    <dd class="col-sm-9">{{ current_screenshot.timestamp|date:"Y-m-d H:i:s" }}</dd>
+                    
+                    <dt class="col-sm-3">Viewport:</dt>
+                    <dd class="col-sm-9">{{ current_screenshot.viewport_size }}</dd>
+                    
+                    {% if current_screenshot.pipeline_url %}
+                    <dt class="col-sm-3">Pipeline:</dt>
+                    <dd class="col-sm-9"><a href="{{ current_screenshot.pipeline_url }}" target="_blank">View</a></dd>
+                    {% endif %}
+                    
+                    {% if current_screenshot.metadata %}
+                    <dt class="col-sm-3">Metadata:</dt>
+                    <dd class="col-sm-9"><pre class="mb-0">{{ current_screenshot.metadata|safe }}</pre></dd>
+                    {% endif %}
+                </dl>
             </div>
         {% else %}
-            <div style="padding: 1rem;">
-                <p>No screenshot found for this page on the current branch.</p>
+            <div class="card-body">
+                <p class="text-muted mb-0">No screenshot found for this page on the current branch.</p>
             </div>
         {% endif %}
     </div>
     
-    <div class="comparison-item">
-        <h3>Default Branch: {{ project.default_branch }}</h3>
+    <div class="card">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0">Default Branch: {{ project.default_branch }}</h5>
+        </div>
         {% if default_screenshot %}
-            <img src="{{ default_screenshot.image.url }}" alt="{{ page_name }} - {{ project.default_branch }}">
-            <div style="padding: 1rem;">
-                <p><strong>Timestamp:</strong> {{ default_screenshot.timestamp|date:"Y-m-d H:i:s" }}</p>
-                <p><strong>Viewport:</strong> {{ default_screenshot.viewport_size }}</p>
-                {% if default_screenshot.pipeline_url %}
-                    <p><strong>Pipeline:</strong> <a href="{{ default_screenshot.pipeline_url }}" target="_blank">View</a></p>
-                {% endif %}
-                {% if default_screenshot.metadata %}
-                    <p><strong>Metadata:</strong> <pre>{{ default_screenshot.metadata|safe }}</pre></p>
-                {% endif %}
+            <img src="{{ default_screenshot.image.url }}" alt="{{ page_name }} - {{ project.default_branch }}" class="card-img-top">
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-3">Timestamp:</dt>
+                    <dd class="col-sm-9">{{ default_screenshot.timestamp|date:"Y-m-d H:i:s" }}</dd>
+                    
+                    <dt class="col-sm-3">Viewport:</dt>
+                    <dd class="col-sm-9">{{ default_screenshot.viewport_size }}</dd>
+                    
+                    {% if default_screenshot.pipeline_url %}
+                    <dt class="col-sm-3">Pipeline:</dt>
+                    <dd class="col-sm-9"><a href="{{ default_screenshot.pipeline_url }}" target="_blank">View</a></dd>
+                    {% endif %}
+                    
+                    {% if default_screenshot.metadata %}
+                    <dt class="col-sm-3">Metadata:</dt>
+                    <dd class="col-sm-9"><pre class="mb-0">{{ default_screenshot.metadata|safe }}</pre></dd>
+                    {% endif %}
+                </dl>
             </div>
         {% else %}
-            <div style="padding: 1rem;">
-                <p>No screenshot found for this page on the default branch.</p>
+            <div class="card-body">
+                <p class="text-muted mb-0">No screenshot found for this page on the default branch.</p>
             </div>
         {% endif %}
     </div>
 </div>
 
-<div style="margin-top: 2rem;">
-    <a href="{% url 'screenshots:branch_detail' project.id branch.id %}">&larr; Back to branch</a>
+<div class="mt-4">
+    <a href="{% url 'screenshots:branch_detail' project.id branch.id %}" class="btn btn-secondary">&larr; Back to branch</a>
 </div>
 {% endblock %}

@@ -98,6 +98,34 @@ curl -X POST http://localhost:8000/api/upload/ \
   -F 'metadata={"browser": "chrome", "version": "120"}'
 ```
 
+**Using JWT from CI/CD (GitLab/GitHub):**
+
+The application supports JWT authentication from multiple OIDC providers. GitLab and GitHub Actions are supported by default:
+
+```bash
+# GitLab CI/CD - use CI_JOB_JWT
+curl -X POST http://localhost:8000/api/upload/ \
+  -H "Authorization: Bearer $CI_JOB_JWT" \
+  -F "project=my-project" \
+  -F "branch=feature-branch" \
+  -F "page_name=homepage" \
+  -F "viewport_size=1920x1080" \
+  -F "image=@screenshot.png" \
+  -F "pipeline_url=$CI_PIPELINE_URL" \
+  -F "timestamp=$(date -Iseconds)"
+
+# GitHub Actions - use ACTIONS_ID_TOKEN_REQUEST_TOKEN
+curl -X POST http://localhost:8000/api/upload/ \
+  -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+  -F "project=$GITHUB_REPOSITORY" \
+  -F "branch=$GITHUB_REF_NAME" \
+  -F "page_name=homepage" \
+  -F "viewport_size=1920x1080" \
+  -F "image=@screenshot.png" \
+  -F "pipeline_url=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
+  -F "timestamp=$(date -Iseconds)"
+```
+
 **Using Session Authentication:**
 ```bash
 # Login first to establish session
@@ -115,26 +143,59 @@ curl -X POST http://localhost:8000/api/upload/ \
 
 ### GitLab CI/CD Integration
 
-Add to your `.gitlab-ci.yml`:
+GitLab CI/CD can use JWT tokens for authentication. The JWT is automatically verified against GitLab's JWKS endpoint:
 
 ```yaml
 screenshot_upload:
   stage: test
-  before_script:
-    # Create a token for API access (do this once in Django admin and store in CI/CD variables)
-    - export UI_STORY_TOKEN=$UI_STORY_API_TOKEN
+  id_tokens:
+    CI_JOB_JWT:
+      aud: https://your-ui-story-instance.com
   script:
-    - # Run your UI tests and capture screenshots
     - |
       curl -X POST https://your-ui-story-instance.com/api/upload/ \
-        -H "Authorization: Token $UI_STORY_TOKEN" \
-        -F "project=$CI_PROJECT_NAME" \
+        -H "Authorization: Bearer $CI_JOB_JWT" \
+        -F "project=$CI_PROJECT_PATH" \
         -F "branch=$CI_COMMIT_REF_NAME" \
         -F "page_name=homepage" \
         -F "viewport_size=1920x1080" \
         -F "image=@screenshot.png" \
         -F "pipeline_url=$CI_PIPELINE_URL" \
         -F "timestamp=$(date -Iseconds)"
+```
+
+### GitHub Actions Integration
+
+GitHub Actions can also use JWT tokens:
+
+```yaml
+name: Upload Screenshots
+on: [push]
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Get OIDC token
+        id: oidc
+        run: |
+          TOKEN=$(curl -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=https://your-ui-story-instance.com" | jq -r .value)
+          echo "token=$TOKEN" >> $GITHUB_OUTPUT
+      - name: Upload screenshot
+        run: |
+          curl -X POST https://your-ui-story-instance.com/api/upload/ \
+            -H "Authorization: Bearer ${{ steps.oidc.outputs.token }}" \
+            -F "project=$GITHUB_REPOSITORY" \
+            -F "branch=$GITHUB_REF_NAME" \
+            -F "page_name=homepage" \
+            -F "viewport_size=1920x1080" \
+            -F "image=@screenshot.png" \
+            -F "pipeline_url=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
+            -F "timestamp=$(date -Iseconds)"
 ```
 
 ## Development
@@ -187,6 +248,34 @@ Visit http://localhost:8000/admin/authtoken/tokenproxy/
 
 The default configuration uses SQLite. For production, configure PostgreSQL or MySQL in `config/settings.py`.
 
+### Multi-Provider JWT Authentication
+
+The application supports JWT authentication from multiple OIDC providers simultaneously:
+
+**Built-in providers:**
+- GitLab (https://gitlab.com)
+- GitHub Actions (https://github.com)
+
+**Adding custom providers:**
+
+Set the `OIDC_PROVIDERS` environment variable or update `config/settings.py`:
+
+```python
+OIDC_PROVIDERS = {
+    "https://custom-provider.com": {
+        "jwks_endpoint": "https://custom-provider.com/.well-known/jwks.json",
+    }
+}
+```
+
+**Project authorization:**
+
+Optionally restrict which projects can upload screenshots:
+
+```bash
+export OIDC_ALLOWED_PROJECTS="group/project1,group/project2,owner/repo"
+```
+
 ### Environment Variables
 
 Configure these environment variables for production:
@@ -194,8 +283,9 @@ Configure these environment variables for production:
 - `SECRET_KEY`: Django secret key (required for production)
 - `DEBUG`: Set to `False` for production
 - `ALLOWED_HOSTS`: Comma-separated list of allowed hosts
-- `OIDC_RP_CLIENT_ID`: OIDC client ID
-- `OIDC_RP_CLIENT_SECRET`: OIDC client secret
+- `OIDC_ALLOWED_PROJECTS`: Comma-separated list of allowed projects for JWT auth (optional)
+- `OIDC_RP_CLIENT_ID`: OIDC client ID (for web UI login)
+- `OIDC_RP_CLIENT_SECRET`: OIDC client secret (for web UI login)
 - `OIDC_OP_AUTHORIZATION_ENDPOINT`: OIDC authorization URL
 - `OIDC_OP_TOKEN_ENDPOINT`: OIDC token URL
 - `OIDC_OP_USER_ENDPOINT`: OIDC user info URL

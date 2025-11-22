@@ -145,12 +145,8 @@ OIDC_RP_CLIENT_SECRET = os.environ.get("OIDC_RP_CLIENT_SECRET", "")
 OIDC_OP_AUTHORIZATION_ENDPOINT = os.environ.get(
     "OIDC_OP_AUTHORIZATION_ENDPOINT", "https://gitlab.com/oauth/authorize"
 )
-OIDC_OP_TOKEN_ENDPOINT = os.environ.get(
-    "OIDC_OP_TOKEN_ENDPOINT", "https://gitlab.com/oauth/token"
-)
-OIDC_OP_USER_ENDPOINT = os.environ.get(
-    "OIDC_OP_USER_ENDPOINT", "https://gitlab.com/oauth/userinfo"
-)
+OIDC_OP_TOKEN_ENDPOINT = os.environ.get("OIDC_OP_TOKEN_ENDPOINT", "https://gitlab.com/oauth/token")
+OIDC_OP_USER_ENDPOINT = os.environ.get("OIDC_OP_USER_ENDPOINT", "https://gitlab.com/oauth/userinfo")
 OIDC_RP_SIGN_ALGO = "RS256"
 OIDC_OP_JWKS_ENDPOINT = os.environ.get(
     "OIDC_OP_JWKS_ENDPOINT", "https://gitlab.com/oauth/discovery/keys"
@@ -161,8 +157,28 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.SessionAuthentication",
         "rest_framework.authentication.TokenAuthentication",
+        "screenshots.authentication.MultiProviderJWTAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
     ],
 }
+
+# Multi-provider OIDC/JWT Configuration
+# Map of additional OIDC providers beyond the defaults (GitLab, GitHub)
+# Example:
+# OIDC_PROVIDERS = {
+#     "https://custom-provider.com": {
+#         "jwks_endpoint": "https://custom-provider.com/.well-known/jwks.json",
+#     }
+# }
+OIDC_PROVIDERS = {}
+
+# Optional: List of allowed projects for JWT authentication
+# If set, only tokens from these projects will be accepted
+# Example: ["group/project", "owner/repo"]
+OIDC_ALLOWED_PROJECTS = (
+    os.environ.get("OIDC_ALLOWED_PROJECTS", "").split(",")
+    if os.environ.get("OIDC_ALLOWED_PROJECTS")
+    else None
+)

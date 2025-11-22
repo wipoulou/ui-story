@@ -15,9 +15,7 @@ class Project(models.Model):
 
 
 class Branch(models.Model):
-    project = models.ForeignKey(
-        Project, on_delete=models.CASCADE, related_name="branches"
-    )
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="branches")
     name = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -34,12 +32,8 @@ class Branch(models.Model):
 
 
 class Screenshot(models.Model):
-    project = models.ForeignKey(
-        Project, on_delete=models.CASCADE, related_name="screenshots"
-    )
-    branch = models.ForeignKey(
-        Branch, on_delete=models.CASCADE, related_name="screenshots"
-    )
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="screenshots")
+    branch = models.ForeignKey(Branch, on_delete=models.CASCADE, related_name="screenshots")
     page_name = models.CharField(max_length=200)
     viewport_size = models.CharField(max_length=50)
     image = models.ImageField(upload_to="screenshots/%Y/%m/%d/")

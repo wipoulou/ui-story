@@ -58,8 +58,6 @@ class ScreenshotUploadSerializer(serializers.Serializer):
         branch, _ = Branch.objects.get_or_create(project=project, name=branch_name)
 
         # Create screenshot
-        screenshot = Screenshot.objects.create(
-            project=project, branch=branch, **validated_data
-        )
+        screenshot = Screenshot.objects.create(project=project, branch=branch, **validated_data)
 
         return screenshot
