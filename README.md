@@ -12,20 +12,166 @@ A Django application for storing and comparing UI screenshots across different b
 
 ## Setup
 
-### Docker (Recommended)
+### Docker with Docker Compose (Recommended)
 
-The easiest way to run the application is using Docker:
+The easiest and most robust way to run the application is using Docker Compose with Gunicorn as the production web server.
+
+#### Development Setup
+
+For local development with hot-reloading:
 
 ```bash
-# Build and run with docker-compose
-docker-compose up
+# Use the development docker-compose configuration
+docker-compose -f docker-compose.dev.yml up
 
-# Or build and run manually
-docker build -t ui-story .
-docker run -p 8000:8000 -e SECRET_KEY=your-secret-key ui-story
+# The application will be available at http://localhost:8000/
+# Code changes will be reflected immediately (volume mounted)
 ```
 
-The application will be available at `http://localhost:8000/`
+#### Production Setup
+
+For production deployment with proper security:
+
+1. **Create environment configuration:**
+
+```bash
+# Copy the example environment file
+cp .env.example .env
+
+# Edit .env and set your configuration
+nano .env  # or use your preferred editor
+```
+
+**IMPORTANT**: You must configure these required settings in `.env`:
+
+- `SECRET_KEY`: Generate a secure random key (see below)
+- `DEBUG`: Set to `False` for production
+- `ALLOWED_HOSTS`: Set to your domain(s), e.g., `yourdomain.com,www.yourdomain.com`
+
+**Generate a secure SECRET_KEY:**
+
+```bash
+python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())'
+```
+
+2. **Start the application:**
+
+```bash
+# Build and start the services
+docker-compose up -d
+
+# Check logs
+docker-compose logs -f web
+
+# The application will be available at http://localhost:8000/
+```
+
+3. **Create a superuser (first time only):**
+
+```bash
+# Create an admin user to access Django admin
+docker-compose exec web python manage.py createsuperuser
+```
+
+4. **Create API tokens for CI/CD:**
+
+```bash
+# Create a token for your CI/CD pipeline
+docker-compose exec web python manage.py create_token <username>
+```
+
+**Environment Variables Reference:**
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `SECRET_KEY` | **Yes** | - | Django secret key. Must be unique and secret in production. |
+| `DEBUG` | No | `False` | Enable debug mode. Always set to `False` in production. |
+| `ALLOWED_HOSTS` | **Yes** | - | Comma-separated list of domains/IPs (e.g., `yourdomain.com,www.yourdomain.com`). |
+| `OIDC_RP_CLIENT_ID` | No | - | OIDC client ID for web UI login (optional). |
+| `OIDC_RP_CLIENT_SECRET` | No | - | OIDC client secret for web UI login (optional). |
+| `OIDC_ALLOWED_PROJECTS` | No | - | Comma-separated list of allowed projects for JWT auth (optional). |
+
+**Docker Compose Commands:**
+
+```bash
+# Start services in background
+docker-compose up -d
+
+# Stop services
+docker-compose down
+
+# View logs
+docker-compose logs -f web
+
+# Rebuild after code changes
+docker-compose up -d --build
+
+# Access shell in container
+docker-compose exec web sh
+
+# Run Django management commands
+docker-compose exec web python manage.py <command>
+```
+
+**Data Persistence:**
+
+Docker Compose creates named volumes for persistent data:
+- `media_data`: Uploaded screenshot images
+- `db_data`: SQLite database file
+
+To backup your data:
+```bash
+# Backup database and media files
+docker-compose exec web tar czf /tmp/backup.tar.gz /app/db.sqlite3 /app/media
+docker cp $(docker-compose ps -q web):/tmp/backup.tar.gz ./backup.tar.gz
+```
+
+#### Using Pre-built Images
+
+Instead of building locally, you can use pre-built images from GitHub Container Registry.
+
+**For deployments without the source code:**
+
+```bash
+# Pull the latest image
+docker pull ghcr.io/wipoulou/ui-story:latest
+
+# Create a new directory for your deployment
+mkdir ui-story-deploy && cd ui-story-deploy
+
+# Download the example environment file
+curl -O https://raw.githubusercontent.com/wipoulou/ui-story/main/.env.example
+
+# Create .env file with your configuration
+cp .env.example .env
+nano .env
+
+# Create docker-compose.yml using the pre-built image
+cat > docker-compose.yml << 'EOF'
+version: '3.8'
+
+services:
+  web:
+    image: ghcr.io/wipoulou/ui-story:latest
+    ports:
+      - "8000:8000"
+    volumes:
+      - media_data:/app/media
+      - db_data:/app
+    env_file:
+      - .env
+    restart: unless-stopped
+
+volumes:
+  media_data:
+  db_data:
+EOF
+
+# Start the application
+docker-compose up -d
+```
+
+**If you've already cloned the repository**, you can modify the existing `docker-compose.yml` to use the pre-built image instead of building locally. Just change the `build: .` line to `image: ghcr.io/wipoulou/ui-story:latest`.
 
 ### Local Installation
 
@@ -293,7 +439,19 @@ Configure these environment variables for production:
 
 ## Deployment
 
-### Docker Image
+### Production Deployment with Docker Compose
+
+The recommended way to deploy ui-story in production is using Docker Compose. See the [Docker with Docker Compose](#docker-with-docker-compose-recommended) section above for detailed setup instructions.
+
+**Quick production deployment:**
+
+1. Create `.env` file with your configuration (see `.env.example`)
+2. Ensure `SECRET_KEY`, `DEBUG=False`, and `ALLOWED_HOSTS` are properly set
+3. Run `docker-compose up -d`
+4. Create superuser: `docker-compose exec web python manage.py createsuperuser`
+5. Create API tokens: `docker-compose exec web python manage.py create_token <username>`
+
+### Using Pre-built Docker Images
 
 The repository includes a GitHub Action that automatically builds and pushes Docker images to GitHub Container Registry (ghcr.io) on every push to main and on tags.
 
@@ -308,27 +466,82 @@ docker run -p 8000:8000 \
   ghcr.io/wipoulou/ui-story:latest
 ```
 
-**Using docker-compose in production:**
+See the [Using Pre-built Images](#using-pre-built-images) section for docker-compose configuration with pre-built images.
+
+### Reverse Proxy Setup (Recommended)
+
+For production deployments, it's recommended to use a reverse proxy like Nginx or Traefik in front of the application:
+
+**Example with Nginx:**
+
+```nginx
+server {
+    listen 80;
+    server_name yourdomain.com;
+
+    location / {
+        proxy_pass http://localhost:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Optional: Serve media files directly through Nginx for better performance
+    # Update the path to match your Docker volume mount or host directory
+    # location /media/ {
+    #     alias /var/lib/docker/volumes/ui-story_media_data/_data/;
+    # }
+
+    client_max_body_size 100M;  # Allow large screenshot uploads
+}
+```
+
+**Example with Traefik and Docker Compose:**
+
 ```yaml
 version: '3.8'
+
 services:
   web:
     image: ghcr.io/wipoulou/ui-story:latest
-    ports:
-      - "8000:8000"
     volumes:
       - media_data:/app/media
-      - db_data:/app/db.sqlite3
-    environment:
-      - SECRET_KEY=${SECRET_KEY}
-      - DEBUG=False
-      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
-      - OIDC_RP_CLIENT_ID=${OIDC_RP_CLIENT_ID}
-      - OIDC_RP_CLIENT_SECRET=${OIDC_RP_CLIENT_SECRET}
+      - db_data:/app
+    env_file:
+      - .env
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.ui-story.rule=Host(`yourdomain.com`)"
+      - "traefik.http.routers.ui-story.entrypoints=websecure"
+      - "traefik.http.routers.ui-story.tls.certresolver=letsencrypt"
+      - "traefik.http.services.ui-story.loadbalancer.server.port=8000"
+
+  traefik:
+    image: traefik:v2.10
+    command:
+      - "--providers.docker=true"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.email=your-email@example.com"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - letsencrypt_data:/letsencrypt
+    restart: unless-stopped
+
 volumes:
   media_data:
   db_data:
+  letsencrypt_data:
 ```
+
+### Production Database
+
+While SQLite is suitable for small to medium deployments, for larger production deployments consider using PostgreSQL or MySQL. Update your `.env` file and modify `config/settings.py` accordingly.
 
 ### GitHub Actions
 
