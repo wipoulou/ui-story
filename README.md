@@ -12,7 +12,22 @@ A Django application for storing and comparing UI screenshots across different b
 
 ## Setup
 
-### Installation
+### Docker (Recommended)
+
+The easiest way to run the application is using Docker:
+
+```bash
+# Build and run with docker-compose
+docker-compose up
+
+# Or build and run manually
+docker build -t ui-story .
+docker run -p 8000:8000 -e SECRET_KEY=your-secret-key ui-story
+```
+
+The application will be available at `http://localhost:8000/`
+
+### Local Installation
 
 1. Install dependencies using uv:
 ```bash
@@ -185,6 +200,53 @@ Configure these environment variables for production:
 - `OIDC_OP_TOKEN_ENDPOINT`: OIDC token URL
 - `OIDC_OP_USER_ENDPOINT`: OIDC user info URL
 - `OIDC_OP_JWKS_ENDPOINT`: OIDC JWKS URL
+
+## Deployment
+
+### Docker Image
+
+The repository includes a GitHub Action that automatically builds and pushes Docker images to GitHub Container Registry (ghcr.io) on every push to main and on tags.
+
+**Pull and run the latest image:**
+```bash
+docker pull ghcr.io/wipoulou/ui-story:latest
+docker run -p 8000:8000 \
+  -e SECRET_KEY=your-production-secret \
+  -e DEBUG=False \
+  -e ALLOWED_HOSTS=yourdomain.com \
+  -v /path/to/media:/app/media \
+  ghcr.io/wipoulou/ui-story:latest
+```
+
+**Using docker-compose in production:**
+```yaml
+version: '3.8'
+services:
+  web:
+    image: ghcr.io/wipoulou/ui-story:latest
+    ports:
+      - "8000:8000"
+    volumes:
+      - media_data:/app/media
+      - db_data:/app/db.sqlite3
+    environment:
+      - SECRET_KEY=${SECRET_KEY}
+      - DEBUG=False
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+      - OIDC_RP_CLIENT_ID=${OIDC_RP_CLIENT_ID}
+      - OIDC_RP_CLIENT_SECRET=${OIDC_RP_CLIENT_SECRET}
+volumes:
+  media_data:
+  db_data:
+```
+
+### GitHub Actions
+
+The `.github/workflows/docker-build.yml` workflow:
+- Builds Docker images on push to main and on tags
+- Pushes images to GitHub Container Registry
+- Tags images with branch name, git SHA, and semantic versions
+- Uses layer caching for faster builds
 
 ## Models
 
