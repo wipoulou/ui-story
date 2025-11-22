@@ -1,0 +1,23 @@
+[project]
+name = "ui-story"
+version = "0.1.0"
+description = "Django app for UI screenshot storage with OIDC authentication"
+requires-python = ">=3.12"
+dependencies = [
+    "django>=5.0",
+    "djangorestframework>=3.15",
+    "mozilla-django-oidc>=4.0",
+    "pillow>=10.0",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+ignore = []
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"

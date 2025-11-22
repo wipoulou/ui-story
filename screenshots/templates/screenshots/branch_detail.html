@@ -1,0 +1,41 @@
+{% extends "screenshots/base.html" %}
+
+{% block title %}{{ project.name }} - {{ branch.name }}{% endblock %}
+
+{% block content %}
+<div class="breadcrumb">
+    <a href="/">Projects</a> / 
+    <a href="{% url 'screenshots:project_detail' project.id %}">{{ project.name }}</a> / 
+    {{ branch.name }}
+</div>
+
+<h2>{{ project.name }} - {{ branch.name }}</h2>
+
+{% if grouped_screenshots %}
+    {% for group in grouped_screenshots %}
+    <div class="timestamp-group">
+        <h3>{{ group.timestamp|date:"Y-m-d H:i:s" }}</h3>
+        <div class="screenshot-grid">
+            {% for screenshot in group.screenshots %}
+            <div class="screenshot-item">
+                <a href="{% url 'screenshots:screenshot_comparison' project.id branch.id screenshot.page_name %}">
+                    <img src="{{ screenshot.image.url }}" alt="{{ screenshot.page_name }}">
+                </a>
+                <div class="screenshot-info">
+                    <strong>{{ screenshot.page_name }}</strong><br>
+                    <small>Viewport: {{ screenshot.viewport_size }}</small><br>
+                    {% if screenshot.pipeline_url %}
+                        <small><a href="{{ screenshot.pipeline_url }}" target="_blank">Pipeline</a></small>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="card">
+        <p>No screenshots found for this branch.</p>
+    </div>
+{% endif %}
+{% endblock %}

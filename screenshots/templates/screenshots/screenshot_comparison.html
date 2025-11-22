@@ -1,0 +1,62 @@
+{% extends "screenshots/base.html" %}
+
+{% block title %}Compare {{ page_name }} - {{ project.name }}{% endblock %}
+
+{% block content %}
+<div class="breadcrumb">
+    <a href="/">Projects</a> / 
+    <a href="{% url 'screenshots:project_detail' project.id %}">{{ project.name }}</a> / 
+    <a href="{% url 'screenshots:branch_detail' project.id branch.id %}">{{ branch.name }}</a> / 
+    Compare {{ page_name }}
+</div>
+
+<h2>Compare: {{ page_name }}</h2>
+
+<div class="comparison-container">
+    <div class="comparison-item">
+        <h3>Current Branch: {{ branch.name }}</h3>
+        {% if current_screenshot %}
+            <img src="{{ current_screenshot.image.url }}" alt="{{ page_name }} - {{ branch.name }}">
+            <div style="padding: 1rem;">
+                <p><strong>Timestamp:</strong> {{ current_screenshot.timestamp|date:"Y-m-d H:i:s" }}</p>
+                <p><strong>Viewport:</strong> {{ current_screenshot.viewport_size }}</p>
+                {% if current_screenshot.pipeline_url %}
+                    <p><strong>Pipeline:</strong> <a href="{{ current_screenshot.pipeline_url }}" target="_blank">View</a></p>
+                {% endif %}
+                {% if current_screenshot.metadata %}
+                    <p><strong>Metadata:</strong> <pre>{{ current_screenshot.metadata|safe }}</pre></p>
+                {% endif %}
+            </div>
+        {% else %}
+            <div style="padding: 1rem;">
+                <p>No screenshot found for this page on the current branch.</p>
+            </div>
+        {% endif %}
+    </div>
+    
+    <div class="comparison-item">
+        <h3>Default Branch: {{ project.default_branch }}</h3>
+        {% if default_screenshot %}
+            <img src="{{ default_screenshot.image.url }}" alt="{{ page_name }} - {{ project.default_branch }}">
+            <div style="padding: 1rem;">
+                <p><strong>Timestamp:</strong> {{ default_screenshot.timestamp|date:"Y-m-d H:i:s" }}</p>
+                <p><strong>Viewport:</strong> {{ default_screenshot.viewport_size }}</p>
+                {% if default_screenshot.pipeline_url %}
+                    <p><strong>Pipeline:</strong> <a href="{{ default_screenshot.pipeline_url }}" target="_blank">View</a></p>
+                {% endif %}
+                {% if default_screenshot.metadata %}
+                    <p><strong>Metadata:</strong> <pre>{{ default_screenshot.metadata|safe }}</pre></p>
+                {% endif %}
+            </div>
+        {% else %}
+            <div style="padding: 1rem;">
+                <p>No screenshot found for this page on the default branch.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<div style="margin-top: 2rem;">
+    <a href="{% url 'screenshots:branch_detail' project.id branch.id %}">&larr; Back to branch</a>
+</div>
+{% endblock %}
