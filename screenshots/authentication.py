@@ -8,6 +8,9 @@ from rest_framework import authentication, exceptions
 
 logger = logging.getLogger(__name__)
 
+# Django's default max_length for username
+USERNAME_MAX_LENGTH = 150
+
 
 class MultiProviderJWTAuthentication(authentication.BaseAuthentication):
     """
@@ -29,7 +32,10 @@ class MultiProviderJWTAuthentication(authentication.BaseAuthentication):
         if not auth_header.startswith("Bearer "):
             return None
 
-        token = auth_header.split(" ")[1]
+        parts = auth_header.split(" ", 1)
+        if len(parts) != 2:
+            return None
+        token = parts[1]
 
         try:
             # Decode without verification first to get the issuer
@@ -116,8 +122,8 @@ class MultiProviderJWTAuthentication(authentication.BaseAuthentication):
             or f"ci-user-{payload.get('sub', 'unknown')}"
         )
 
-        # Normalize username
-        username = username[:150]  # Django username max length
+        # Normalize username to Django's max length
+        username = username[:USERNAME_MAX_LENGTH]
 
         # Get or create user
         user, created = User.objects.get_or_create(

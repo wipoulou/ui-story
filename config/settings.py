@@ -177,8 +177,7 @@ OIDC_PROVIDERS = {}
 # Optional: List of allowed projects for JWT authentication
 # If set, only tokens from these projects will be accepted
 # Example: ["group/project", "owner/repo"]
+_allowed_projects = os.environ.get("OIDC_ALLOWED_PROJECTS", "").strip()
 OIDC_ALLOWED_PROJECTS = (
-    os.environ.get("OIDC_ALLOWED_PROJECTS", "").split(",")
-    if os.environ.get("OIDC_ALLOWED_PROJECTS")
-    else None
+    [p.strip() for p in _allowed_projects.split(",") if p.strip()] if _allowed_projects else None
 )
