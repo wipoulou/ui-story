@@ -30,7 +30,9 @@ DEBUG = os.environ.get("DEBUG", "True").lower() in ("true", "1", "yes")
 
 # Parse ALLOWED_HOSTS from environment variable
 _allowed_hosts = os.environ.get("ALLOWED_HOSTS", "")
-ALLOWED_HOSTS = [h.strip() for h in _allowed_hosts.split(",") if h.strip()] if _allowed_hosts else []
+ALLOWED_HOSTS = (
+    [h.strip() for h in _allowed_hosts.split(",") if h.strip()] if _allowed_hosts else []
+)
 
 
 # Application definition
