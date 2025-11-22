@@ -132,9 +132,59 @@ uv run ruff check .
 uv run ruff format .
 ```
 
+### Running Tests
+
+```bash
+uv run python manage.py test
+```
+
+### Creating API Tokens
+
+For CI/CD integration, create API tokens:
+
+**Using management command (easiest):**
+```bash
+uv run python manage.py create_token <username>
+```
+
+**Via Django shell:**
+```bash
+uv run python manage.py shell
+```
+
+Then in the Python shell:
+```python
+from django.contrib.auth.models import User
+from rest_framework.authtoken.models import Token
+
+# Create or get user
+user = User.objects.get(username='ci-user')
+
+# Create token
+token = Token.objects.create(user=user)
+print(f"Token: {token.key}")
+```
+
+**Via Django admin:**
+Visit http://localhost:8000/admin/authtoken/tokenproxy/
+
 ### Database
 
 The default configuration uses SQLite. For production, configure PostgreSQL or MySQL in `config/settings.py`.
+
+### Environment Variables
+
+Configure these environment variables for production:
+
+- `SECRET_KEY`: Django secret key (required for production)
+- `DEBUG`: Set to `False` for production
+- `ALLOWED_HOSTS`: Comma-separated list of allowed hosts
+- `OIDC_RP_CLIENT_ID`: OIDC client ID
+- `OIDC_RP_CLIENT_SECRET`: OIDC client secret
+- `OIDC_OP_AUTHORIZATION_ENDPOINT`: OIDC authorization URL
+- `OIDC_OP_TOKEN_ENDPOINT`: OIDC token URL
+- `OIDC_OP_USER_ENDPOINT`: OIDC user info URL
+- `OIDC_OP_JWKS_ENDPOINT`: OIDC JWKS URL
 
 ## Models
 
