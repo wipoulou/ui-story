@@ -10,7 +10,7 @@ services:
       - db_data:/app
     environment:
       - DEBUG=${DEBUG:-False}
-      - SECRET_KEY=${SECRET_KEY:?SECRET_KEY must be set in .env file}
+      - SECRET_KEY=${SECRET_KEY:?SECRET_KEY environment variable is required}
       - ALLOWED_HOSTS=${ALLOWED_HOSTS:-localhost,127.0.0.1}
       - OIDC_RP_CLIENT_ID=${OIDC_RP_CLIENT_ID:-}
       - OIDC_RP_CLIENT_SECRET=${OIDC_RP_CLIENT_SECRET:-}

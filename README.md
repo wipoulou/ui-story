@@ -128,11 +128,19 @@ docker cp $(docker-compose ps -q web):/tmp/backup.tar.gz ./backup.tar.gz
 
 #### Using Pre-built Images
 
-Instead of building locally, you can use pre-built images from GitHub Container Registry:
+Instead of building locally, you can use pre-built images from GitHub Container Registry.
+
+**For deployments without the source code:**
 
 ```bash
 # Pull the latest image
 docker pull ghcr.io/wipoulou/ui-story:latest
+
+# Create a new directory for your deployment
+mkdir ui-story-deploy && cd ui-story-deploy
+
+# Download the example environment file
+curl -O https://raw.githubusercontent.com/wipoulou/ui-story/main/.env.example
 
 # Create .env file with your configuration
 cp .env.example .env
@@ -162,6 +170,8 @@ EOF
 # Start the application
 docker-compose up -d
 ```
+
+**If you've already cloned the repository**, you can modify the existing `docker-compose.yml` to use the pre-built image instead of building locally. Just change the `build: .` line to `image: ghcr.io/wipoulou/ui-story:latest`.
 
 ### Local Installation
 
@@ -477,9 +487,11 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 
-    location /media/ {
-        alias /path/to/media/;
-    }
+    # Optional: Serve media files directly through Nginx for better performance
+    # Update the path to match your Docker volume mount or host directory
+    # location /media/ {
+    #     alias /var/lib/docker/volumes/ui-story_media_data/_data/;
+    # }
 
     client_max_body_size 100M;  # Allow large screenshot uploads
 }
