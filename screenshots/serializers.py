@@ -6,7 +6,7 @@ from .models import Branch, Project, Screenshot
 class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
-        fields = ['id', 'name', 'default_branch', 'created_at', 'updated_at']
+        fields = ["id", "name", "default_branch", "created_at", "updated_at"]
 
 
 class BranchSerializer(serializers.ModelSerializer):
@@ -14,7 +14,7 @@ class BranchSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Branch
-        fields = ['id', 'project', 'name', 'is_default', 'created_at', 'updated_at']
+        fields = ["id", "project", "name", "is_default", "created_at", "updated_at"]
 
     def get_is_default(self, obj):
         return obj.is_default()
@@ -24,16 +24,16 @@ class ScreenshotSerializer(serializers.ModelSerializer):
     class Meta:
         model = Screenshot
         fields = [
-            'id',
-            'project',
-            'branch',
-            'page_name',
-            'viewport_size',
-            'image',
-            'pipeline_url',
-            'metadata',
-            'timestamp',
-            'created_at',
+            "id",
+            "project",
+            "branch",
+            "page_name",
+            "viewport_size",
+            "image",
+            "pipeline_url",
+            "metadata",
+            "timestamp",
+            "created_at",
         ]
 
 
@@ -48,8 +48,8 @@ class ScreenshotUploadSerializer(serializers.Serializer):
     timestamp = serializers.DateTimeField()
 
     def create(self, validated_data):
-        project_name = validated_data.pop('project')
-        branch_name = validated_data.pop('branch')
+        project_name = validated_data.pop("project")
+        branch_name = validated_data.pop("branch")
 
         # Get or create project
         project, _ = Project.objects.get_or_create(name=project_name)

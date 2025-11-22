@@ -14,7 +14,7 @@ from .serializers import (
 )
 
 
-@api_view(['POST'])
+@api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def upload_screenshot(request):
     """API endpoint to upload a screenshot with metadata."""
@@ -52,7 +52,7 @@ class ScreenshotViewSet(viewsets.ReadOnlyModelViewSet):
 def project_list(request):
     """View to list all projects."""
     projects = Project.objects.all()
-    return render(request, 'screenshots/project_list.html', {'projects': projects})
+    return render(request, "screenshots/project_list.html", {"projects": projects})
 
 
 def project_detail(request, project_id):
@@ -61,8 +61,8 @@ def project_detail(request, project_id):
     branches = project.branches.all()
     return render(
         request,
-        'screenshots/project_detail.html',
-        {'project': project, 'branches': branches},
+        "screenshots/project_detail.html",
+        {"project": project, "branches": branches},
     )
 
 
@@ -71,21 +71,21 @@ def branch_detail(request, project_id, branch_id):
     project = get_object_or_404(Project, id=project_id)
     branch = get_object_or_404(Branch, id=branch_id, project=project)
 
-    # Get screenshots grouped by timestamp
-    screenshots = branch.screenshots.all()
+    # Get screenshots ordered by timestamp (descending) for grouping
+    screenshots = branch.screenshots.order_by("-timestamp", "page_name")
 
     # Group screenshots by timestamp
     grouped_screenshots = []
     for timestamp, group in groupby(screenshots, key=lambda x: x.timestamp):
-        grouped_screenshots.append({'timestamp': timestamp, 'screenshots': list(group)})
+        grouped_screenshots.append({"timestamp": timestamp, "screenshots": list(group)})
 
     return render(
         request,
-        'screenshots/branch_detail.html',
+        "screenshots/branch_detail.html",
         {
-            'project': project,
-            'branch': branch,
-            'grouped_screenshots': grouped_screenshots,
+            "project": project,
+            "branch": branch,
+            "grouped_screenshots": grouped_screenshots,
         },
     )
 
@@ -98,7 +98,7 @@ def screenshot_comparison(request, project_id, branch_id, page_name):
     # Get the latest screenshot for this page on this branch
     current_screenshot = (
         Screenshot.objects.filter(branch=branch, page_name=page_name)
-        .order_by('-timestamp')
+        .order_by("-timestamp")
         .first()
     )
 
@@ -112,19 +112,18 @@ def screenshot_comparison(request, project_id, branch_id, page_name):
     if default_branch:
         default_screenshot = (
             Screenshot.objects.filter(branch=default_branch, page_name=page_name)
-            .order_by('-timestamp')
+            .order_by("-timestamp")
             .first()
         )
 
     return render(
         request,
-        'screenshots/screenshot_comparison.html',
+        "screenshots/screenshot_comparison.html",
         {
-            'project': project,
-            'branch': branch,
-            'current_screenshot': current_screenshot,
-            'default_screenshot': default_screenshot,
-            'page_name': page_name,
+            "project": project,
+            "branch": branch,
+            "current_screenshot": current_screenshot,
+            "default_screenshot": default_screenshot,
+            "page_name": page_name,
         },
     )
-

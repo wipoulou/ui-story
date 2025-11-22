@@ -57,9 +57,37 @@ uv run python manage.py runserver
 
 Upload screenshots via POST to `/api/upload/`:
 
+**Using Token Authentication (recommended for CI/CD):**
+
+First, create a token for your user in Django admin or via shell:
+```python
+from django.contrib.auth.models import User
+from rest_framework.authtoken.models import Token
+
+user = User.objects.get(username='your-username')
+token = Token.objects.create(user=user)
+print(token.key)
+```
+
+Then use the token in API requests:
 ```bash
 curl -X POST http://localhost:8000/api/upload/ \
-  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Authorization: Token YOUR_TOKEN_HERE" \
+  -F "project=my-project" \
+  -F "branch=feature-branch" \
+  -F "page_name=homepage" \
+  -F "viewport_size=1920x1080" \
+  -F "image=@screenshot.png" \
+  -F "pipeline_url=https://gitlab.com/my-project/-/pipelines/123" \
+  -F "timestamp=2024-01-01T12:00:00Z" \
+  -F 'metadata={"browser": "chrome", "version": "120"}'
+```
+
+**Using Session Authentication:**
+```bash
+# Login first to establish session
+curl -X POST http://localhost:8000/api/upload/ \
+  -b cookies.txt -c cookies.txt \
   -F "project=my-project" \
   -F "branch=feature-branch" \
   -F "page_name=homepage" \
@@ -77,11 +105,14 @@ Add to your `.gitlab-ci.yml`:
 ```yaml
 screenshot_upload:
   stage: test
+  before_script:
+    # Create a token for API access (do this once in Django admin and store in CI/CD variables)
+    - export UI_STORY_TOKEN=$UI_STORY_API_TOKEN
   script:
     - # Run your UI tests and capture screenshots
     - |
       curl -X POST https://your-ui-story-instance.com/api/upload/ \
-        -H "Authorization: Bearer $CI_JOB_TOKEN" \
+        -H "Authorization: Token $UI_STORY_TOKEN" \
         -F "project=$CI_PROJECT_NAME" \
         -F "branch=$CI_COMMIT_REF_NAME" \
         -F "page_name=homepage" \
