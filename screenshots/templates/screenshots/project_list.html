@@ -1,0 +1,34 @@
+{% extends "screenshots/base.html" %}
+
+{% block title %}Projects - UI Story{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Projects</h2>
+
+{% if projects %}
+    <div class="row">
+        {% for project in projects %}
+        <div class="col-md-6 col-lg-4 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <a href="{% url 'screenshots:project_detail' project.id %}">{{ project.name }}</a>
+                    </h5>
+                    <p class="card-text">
+                        <span class="text-muted">Default branch:</span> 
+                        <span class="badge bg-primary">{{ project.default_branch }}</span>
+                    </p>
+                    <p class="card-text">
+                        <small class="text-muted">Created: {{ project.created_at|date:"Y-m-d H:i" }}</small>
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="alert alert-info">
+        <p class="mb-0">No projects found. Upload your first screenshot via the API.</p>
+    </div>
+{% endif %}
+{% endblock %}
